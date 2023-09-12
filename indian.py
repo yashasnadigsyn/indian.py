@@ -1,0 +1,39 @@
+import requests
+from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+import base64, json
+
+requests.utils.default_user_agent = lambda: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36'
+
+session = requests.Session()
+# session.proxies = {}
+# session.proxies['http'] = 'socks5h://localhost:9150'
+# session.proxies['https'] = 'socks5h://localhost:9150'
+# session.mount('https://', HTTPAdapter(max_retries=3))
+
+def decode(value):
+    value_len = len(value)
+    encoded_value = value[0:10] + value[value_len - 1] + value[12:value_len - 1]
+    decoded_value = base64.b64decode(encoded_value).decode('utf-8')
+    return json.loads(decoded_value)
+#https://einthusan.tv/movie/watch/4gpM/?lang=tamil
+r = session.get(url="https://einthusan.tv/movie/watch/1I9U/?lang=kannada")
+page = BeautifulSoup(r.text, "html.parser")
+
+
+movie_page_url = "https://einthusan.tv/movie/watch/1I9U/?lang=kannada"
+
+page_id = page.find('html')['data-pageid']
+ejpingables = page.find('section', {'id': 'UIVideoPlayer'})['data-ejpingables']
+
+movie_meta_url = movie_page_url.replace('movie', 'ajax/movie')
+
+payload = {
+    'xEvent': 'UIVideoPlayer.PingOutcome',
+    'xJson': '{\"EJOutcomes\":\"' + ejpingables + '\",\"NativeHLS\":false}',
+    'gorilla.csrf.Token': page_id
+}
+
+encoded_url = session.post(movie_meta_url, data=payload).json()['Data']['EJLinks']
+
+print(decode(encoded_url)['MP4Link'])
