@@ -45,6 +45,3 @@ def indian():
 
     print(decode(encoded_url)['MP4Link'])
     return decode(encoded_url)['MP4Link']
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
